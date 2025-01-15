@@ -20,7 +20,7 @@ function App() {
   const [alertVisible, setAlertVisible] = useState(false);  
   const [modalLoading, setModalLoading] = useState(false);  
   const [showOffcanvas, setShowOffcanvas] = useState(false); 
-  const [showHistory, setShowHistory] = useState(false); // Estado para controlar la visibilidad del historial
+  const [showHistory, setShowHistory] = useState(false); 
 
   // Guarda el historial actualizado en localStorage cada vez que cambia el estado del historial
   useEffect(() => {
@@ -36,11 +36,10 @@ function App() {
 
   // Realiza la búsqueda de aeropuertos
   const handleSearch = async () => {
-    setAlertVisible(true); // Muestra el modal de carga
+    setAlertVisible(true);
 
-    // Simula un retraso de 1 segundo para el spinner
     setTimeout(() => {
-      setAlertVisible(false); // Oculta el modal
+      setAlertVisible(false);
     }, 1000);
 
     // Verifica si los resultados ya están en la caché
@@ -61,7 +60,7 @@ function App() {
           [searchTerm]: newAirports, 
         }));
         setAirports(newAirports);  
-        addToHistory(searchTerm);  // Agrega al historial
+        addToHistory(searchTerm);
       } else {
         alert('No se encontraron aeropuertos con ese término.');
       }
@@ -87,9 +86,6 @@ function App() {
     setSearchTerm(term); 
     if (airportCache[term]) {
       setAirports(airportCache[term]);  // Si los resultados están en caché, los carga directamente
-    } else {
-      setAirports([]);  
-      handleSearch();  // Si no están en caché, realiza una nueva búsqueda
     }
   };
 
@@ -102,10 +98,9 @@ function App() {
   // Función para mostrar los detalles de un aeropuerto en el modal
   const handleAirportSelect = (airport) => {
     setSelectedAirport(airport); 
-    setModalLoading(true);  // Muestra el spinner mientras carga los detalles
-    setShowModal(true);  // Muestra el modal
+    setModalLoading(true);
+    setShowModal(true);
 
-    // Simula un retraso de 1 segundo en la carga de los detalles
     setTimeout(() => {
       setModalLoading(false); 
     }, 1000);
