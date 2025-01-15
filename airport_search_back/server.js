@@ -1,11 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
-require('dotenv').config(); // Para gestionar las variables de entorno (API_KEY, API_SECRET)
+require('dotenv').config(); 
 
 const app = express();
 app.use(cors());
-app.use(express.json()); // Para manejar JSON en las solicitudes
+app.use(express.json());
 
 // Ruta para obtener el access token
 const getAccessToken = async () => {

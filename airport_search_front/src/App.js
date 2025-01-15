@@ -1,114 +1,126 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'; 
 import { Modal, Button, Form, Card, InputGroup, Spinner, ListGroup, Offcanvas, Navbar, Nav } from 'react-bootstrap';
-import { FaSearch, FaTrash, FaBars } from 'react-icons/fa';
-import axios from 'axios';
-import 'leaflet/dist/leaflet.css';
+import { FaSearch, FaTrash, FaBars } from 'react-icons/fa'; 
+import axios from 'axios'; 
+import 'leaflet/dist/leaflet.css'; 
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 
-const MAX_HISTORY_LENGTH = 5;
+const MAX_HISTORY_LENGTH = 5; // Límite de historial de búsqueda
 
 function App() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [airports, setAirports] = useState([]);
-  const [selectedAirport, setSelectedAirport] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [history, setHistory] = useState([]);
-  const [airportCache, setAirportCache] = useState({});
-  const [alertVisible, setAlertVisible] = useState(false); // Control de visibilidad del modal de búsqueda
-  const [modalLoading, setModalLoading] = useState(false);  // Control de la carga dentro del modal
-  const [showOffcanvas, setShowOffcanvas] = useState(false);
+  // Estados principales: Búsqueda, resultados, historial, estado de carga, etc.
+  const [searchTerm, setSearchTerm] = useState('');  
+  const [airports, setAirports] = useState([]);  
+  const [selectedAirport, setSelectedAirport] = useState(null); 
+  const [showModal, setShowModal] = useState(false);  
+  const [isLoading,] = useState(false);  
+  const [history, setHistory] = useState([]);  
+  const [airportCache, setAirportCache] = useState({});  
+  const [alertVisible, setAlertVisible] = useState(false);  
+  const [modalLoading, setModalLoading] = useState(false);  
+  const [showOffcanvas, setShowOffcanvas] = useState(false); 
+  const [showHistory, setShowHistory] = useState(false); // Estado para controlar la visibilidad del historial
 
-  useEffect(() => {
-    const storedHistory = JSON.parse(localStorage.getItem('airportSearchHistory')) || [];
-    setHistory(storedHistory);
-  }, []);
-
+  // Guarda el historial actualizado en localStorage cada vez que cambia el estado del historial
   useEffect(() => {
     if (history.length > 0) {
       localStorage.setItem('airportSearchHistory', JSON.stringify(history));
     }
   }, [history]);
 
+  // Función para manejar cambios en el campo de búsqueda (input)
   const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
+    setSearchTerm(event.target.value);  
   };
 
+  // Realiza la búsqueda de aeropuertos
   const handleSearch = async () => {
-    setAlertVisible(true); // Mostrar el modal al iniciar la búsqueda
+    setAlertVisible(true); // Muestra el modal de carga
 
-    // Simular el retraso de 1 segundo para mostrar el spinner en el modal
+    // Simula un retraso de 1 segundo para el spinner
     setTimeout(() => {
-      setAlertVisible(false); // Ocultar el modal después de 1 segundo
-    }, 1000);  // 1 segundo
+      setAlertVisible(false); // Oculta el modal
+    }, 1000);
 
+    // Verifica si los resultados ya están en la caché
     if (airportCache[searchTerm]) {
-      setAirports(airportCache[searchTerm]);
-      return;
+      setAirports(airportCache[searchTerm]);  
+      return; 
     }
 
+    // Hace la solicitud a la API para buscar aeropuertos
     try {
       const response = await axios.post('http://localhost:5000/search-airport', { airport: searchTerm });
 
+      // Si encuentra resultados, los guarda en caché y los muestra
       if (response.data.data.length > 0) {
-        const newAirports = response.data.data;
+        const newAirports = response.data.data;  
         setAirportCache((prevCache) => ({
           ...prevCache,
-          [searchTerm]: newAirports,
+          [searchTerm]: newAirports, 
         }));
-        setAirports(newAirports);
-        addToHistory(searchTerm);
+        setAirports(newAirports);  
+        addToHistory(searchTerm);  // Agrega al historial
       } else {
         alert('No se encontraron aeropuertos con ese término.');
       }
     } catch (error) {
-      console.error('Error al buscar aeropuertos:', error);
+      console.error('Error al buscar aeropuertos:', error);  
       alert('Ocurrió un error al realizar la búsqueda.');
     }
   };
 
+  // Agrega un término de búsqueda al historial y mantiene el límite máximo
   const addToHistory = (term) => {
     setHistory((prevHistory) => {
       const newHistory = [term, ...prevHistory.filter(item => item !== term)];
       if (newHistory.length > MAX_HISTORY_LENGTH) {
-        newHistory.pop();
+        newHistory.pop();  // Limita el historial a MAX_HISTORY_LENGTH elementos
       }
       return newHistory;
     });
   };
 
+  // Maneja la selección de un término del historial
   const handleHistorySelect = (term) => {
-    setSearchTerm(term);
+    setSearchTerm(term); 
     if (airportCache[term]) {
-      setAirports(airportCache[term]);
+      setAirports(airportCache[term]);  // Si los resultados están en caché, los carga directamente
     } else {
-      setAirports([]);
-      handleSearch();
+      setAirports([]);  
+      handleSearch();  // Si no están en caché, realiza una nueva búsqueda
     }
   };
 
+  // Función para borrar el historial de búsqueda
   const handleClearHistory = () => {
-    setHistory([]);
-    localStorage.removeItem('airportSearchHistory');
+    setHistory([]);  // Elimina el historial
+    localStorage.removeItem('airportSearchHistory');  // Elimina el historial del almacenamiento local
   };
 
+  // Función para mostrar los detalles de un aeropuerto en el modal
   const handleAirportSelect = (airport) => {
-    setSelectedAirport(airport);
-    setModalLoading(true); // Cargar cuando seleccionas el aeropuerto
-    setShowModal(true);
+    setSelectedAirport(airport); 
+    setModalLoading(true);  // Muestra el spinner mientras carga los detalles
+    setShowModal(true);  // Muestra el modal
 
-    // Simular retardo para la carga en el modal
+    // Simula un retraso de 1 segundo en la carga de los detalles
     setTimeout(() => {
-      setModalLoading(false); // Después de 1 segundo detener el loading
+      setModalLoading(false); 
     }, 1000);
   };
 
+  // Función para mostrar/ocultar el menú lateral (Offcanvas)
   const toggleOffcanvas = () => setShowOffcanvas(!showOffcanvas);
+
+  // Función para alternar la visibilidad del historial
+  const toggleHistoryVisibility = () => {
+    setShowHistory(!showHistory);
+  };
 
   return (
     <Router>
-      {/* Header con Navbar y Offcanvas */}
       <Navbar bg="light" expand={false} className="mb-4">
         <Navbar.Brand as={Link} to="/" className="ms-3">
           Mi Aplicación
@@ -137,13 +149,15 @@ function App() {
           </Offcanvas.Body>
         </Offcanvas>
       </Navbar>
+
+      {/* Definición de rutas */}
       <Routes>
         <Route path="/" element={<div className="p-5 text-center">Bienvenido a la página principal</div>} />
         <Route
           path="/search"
           element={
             <div className="d-flex justify-content-center flex-column align-items-center mt-5">
-              {/* Modal con solo el spinner cuando buscamos un aeropuerto */}
+              {/* Modal de carga con el spinner */}
               <Modal
                 show={alertVisible}
                 centered
@@ -180,8 +194,13 @@ function App() {
                   </InputGroup>
                 </Card.Body>
 
-                {/* Historial de búsquedas */}
-                {history.length > 0 && (
+                {/* Botón para mostrar/ocultar el historial */}
+                <Button variant="primary" onClick={toggleHistoryVisibility} className="mt-3" size="sm">
+                  {showHistory ? 'Ocultar Historial' : 'Historial de Búsqueda'}
+                </Button>
+
+                {/* Card del historial que se muestra/oculta */}
+                {showHistory && (
                   <Card className="mt-3">
                     <Card.Body>
                       <Card.Title>Historial de búsquedas</Card.Title>
@@ -200,7 +219,7 @@ function App() {
                 )}
               </Card>
 
-              {/* Resultados de búsqueda */}
+              {/* Resultados de la búsqueda */}
               {airports.length > 0 && (
                 <Card className="mt-3 p-3 w-75">
                   <Card.Title>Resultados de la búsqueda</Card.Title>
@@ -210,7 +229,7 @@ function App() {
                         as="li"
                         key={airport.iataCode}
                         action
-                        onClick={() => handleAirportSelect(airport)}  // Muestra el modal
+                        onClick={() => handleAirportSelect(airport)} 
                       >
                         {airport.name}
                       </ListGroup.Item>
